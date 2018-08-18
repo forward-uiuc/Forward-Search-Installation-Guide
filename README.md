@@ -31,7 +31,7 @@ Optionally download Kibana version 5.6.1 here: https://www.elastic.co/downloads/
 
 # Install plugins
 
-Download Entity Elastic Search Analysis Plugin, which encodes our rule to read the import file created above: https://github.com/forward-uiuc/Entity-Elastic-Search-Analysis-Plugin
+Download Entity Elastic Search Analysis Plugin, which encodes our rule to read the import file created above as well as a special tokenizer called layout_tokenizer: https://github.com/forward-uiuc/Entity-Elastic-Search-Analysis-Plugin
 
 Change deployPlugin.sh to reflect the setting of your system (i.e., the path to Elastic Search in your system). And then run it: `./deployPlugin.sh`, which both compiles and installs the plugin.
 
@@ -119,6 +119,93 @@ PUT /test_annotation/
   }
 }
 ```
+The query above creates an index called test_annotation with custom tokenizer "layout_tokenizer" which is defined in Entity Elastic Search Analysis Plugin. It also uses dynamic schema. You may need to read Elastic Search tutorial to understand dynamic schema.
+
+# Bulk import data
+Now we can import data from the json data file generated above. Go to the folder of Entity Search Annotation Indexing and run the following command:
+
+```
+curl -XPOST localhost:9200/test_annotation/_bulk -H ‘Content-Type: application/json’ --data-binary @test_es.json
+```
+
+It will import a few pages we crawled before to the Elastic Search. To test, run the following json query on Kibana:
+
+```
+GET test_annotation/_es_document_search?
+{
+  "search_request":{
+    "query": "@near [ true 1000 ] ( #person data ) @near [ true 1000 5 ] ( #person mining )",
+    "size" : 1000
+  }
+}
+```
+
+You should receive one page result. The meaning of the query above is searching for document where #person is near data and order matters, and in the same document, #person is near mining and order matters.
+
+At this step, we already have the Search Engine. The step below is to create the web interface.
+
+# Install Web Interface
+
+## Summary
+This user interface uses [nodejs](https://nodejs.org/en/) as the server. You need to install [nodejs](https://nodejs.org/en/) first. The backend simply wraps ElasticSearch call. The frontend supports both entity search and entity-semantic document search. Users can click a button to switch between the two. When typing # (hash token) in search input box, the system will autosuggest available entity types.
+
+To understand the code, you need background in [nodejs](https://www.w3schools.com/nodejs/default.asp), [reactjs](https://reactjs.org/tutorial/tutorial.html) and [react semantic ui](https://react.semantic-ui.com/introduction). Start reading code at [index.jsx](https://github.com/forward-uiuc/Spring-2018-Entity-Search/blob/master/entity-search-web-interface/frontend/source/index.jsx) and trace other components from there.
+
+## How to install
+At the folder containing this README:
+```
+cd backend
+npm install
+```
+
+```
+cd frontend
+npm install
+```
+
+## How to start
+At the folder containing this README:
+```
+cd backend
+npm start &
+```
+
+* If listen locally (localhost:8080):
+```
+cd frontend
+npm run dev
+```
+* If listen publicly (0.0.0.0:8080):
+```
+cd frontend
+npm start &
+```
+
+## Troubleshooting
+* No error but cannot open the webpage with a browser
+  * Clear the cache, or use Incognito mode, or switch to another browser. Will fix this issue soon.
+* Error EADDRINUSE:::xxxx means the port xxxx is in use (there is already a running server process)
+  * To see if there is node/nodemon process running: 
+  ``` aux ps | grep node ```
+  * To kill other node processes: 
+  ``` killall node ```
+  * Now you should be able to start servers normally.
+
+# Create Screenshots for Web Interface
+
+Go to Entity Search Annotation Indexing folder, and run the following command to create Screenshots (make folder public inside folder backend in the Interface folder if necessary)
+
+```
+java -cp target/uber-EntityAnnotation-1.0-SNAPSHOT.jar org.forward.entitysearch.experiment.CreateScreenshots "/Users/longpham/Workspace/ForwardSearchInstallationGuide/output/forwarddatalab.org/data/" "/Users/longpham/Workspace/ForwardSearchInstallationGuide/Entity-Semantic-Document-Search-Web-Interface/backend/public/"
+```
+
+# Test
+
+Now, the web-based search engine is ready at localhost:8080
+
+# Notes
+* Currently, the backend for web interface runs on port 1720, which is open to public. However, for some reason, if using UIUC VPN, that port cannot be used. Thus, please not use VPN when trying the demo.
+* There is a live demo on http://harrier08.cs.illinois.edu:8080
 
 
 
