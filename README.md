@@ -17,7 +17,7 @@ Open `run.sh` to understand what it does. Open terminal and run `sh run.sh $doma
 
 You can check log file in `output/$domain/log` to see errors. You can also run `ps -ef | grep chrome` to see if the chrome driver is running. Please note that this code is for production so I set the flag to not show Chrome UI. So you may see it is not running but it is actually running. Check the log files to see updates. For each done URL, an entry is written on .std file in the log folder. 
 
-For each URL, this step downloads the corresponding webpage, and does expensive annotations, so it is relatively slow if running on a personal computer. You may expect 1-2 minutes for an URL depending on how much content the page contains. For a big domain with many pages/URLs, it could take days to finish. Finally, please take note that it runs very slow on my Macbook Pro while it is a few times faster on Falcon machine, probably thanks to its superior CPUs and GPUs. You can make it even faster by running multiple instances on Falcon machine.
+For each URL, this step downloads the corresponding webpage, and does expensive annotations, so it is relatively slow if running on a personal computer. You may expect 1-2 minutes for an URL depending on how much content the page contains. For a big domain with many pages/URLs, it could take days to finish. Finally, please take note that it runs very slow on my Macbook Pro (8 GB RAM) while it is a few times faster on Falcon machine at Forward Lab (128 GB RAM), probably thanks to its superior CPUs, GPUs, and RAM. You can make it even faster by running multiple instances on Falcon machine.
 
 # Create import file for Elastic Search
 ElasticSearch allows bulk import from a file https://www.elastic.co/guide/en/elasticsearch/reference/5.6/docs-bulk.html. We just need to follow the format. In the same folder as above, run a command similar with the following:
@@ -34,11 +34,11 @@ Optionally download Kibana version 5.6.1 here: https://www.elastic.co/downloads/
 
 # Install plugins
 
-Download Entity Elastic Search Analysis Plugin, which encodes our rule to read the import file created above as well as a special tokenizer called layout_tokenizer: https://github.com/forward-uiuc/Entity-Elastic-Search-Analysis-Plugin
+Download Entity Elastic Search Analysis Plugin, which encodes our rule to read the import file created above as well as contains a special tokenizer called `layout_tokenizer`: https://github.com/forward-uiuc/Entity-Elastic-Search-Analysis-Plugin
 
 Change deployPlugin.sh to reflect the setting of your system (i.e., the path to Elastic Search in your system). And then run it: `./deployPlugin.sh`, which both compiles and installs the plugin.
 
-Download Entity Elastic Search API Extension Plugin, which translates hashtag query such as #professor data mining into the format Elastic Search can understand https://github.com/forward-uiuc/Entity-Elastic-Search-API-Extension-Plugin
+Download Entity Elastic Search API Extension Plugin, which translates hashtag query such as `#professor data mining` into the format Elastic Search can understand (using Span Query) https://github.com/forward-uiuc/Entity-Elastic-Search-API-Extension-Plugin
 
 Change deployPlugin.sh to reflect the setting of your system (i.e., the path to Elastic Search in your system). And then run it: `./deployPlugin.sh`, which both compiles and installs the plugin.
 
@@ -56,7 +56,7 @@ In order for our plugin to work, the index needs to have a schema.
 
 Open query console on Kibana: localhost:5601/app/kibana#/dev_tools/
 
-Run the following json query:
+Execute the following json query:
 
 ```
 PUT /test_annotation/
@@ -122,7 +122,7 @@ PUT /test_annotation/
   }
 }
 ```
-The query above creates an index called test_annotation with custom tokenizer "layout_tokenizer" which is defined in Entity Elastic Search Analysis Plugin. It also uses dynamic schema. You may need to read Elastic Search tutorial to understand dynamic schema.
+The query above creates an index called `test_annotation` with custom tokenizer `layout_tokenizer` which is defined in Entity Elastic Search Analysis Plugin. It also uses dynamic schema. You may need to read Elastic Search tutorial to understand dynamic schema.
 
 # Bulk import data
 Now we can import data from the json data file generated above. Go to the folder of Entity Search Annotation Indexing and run the following command:
@@ -143,7 +143,7 @@ GET test_annotation/_es_document_search?
 }
 ```
 
-You should receive one page result. The meaning of the query above is searching for document where #person is near data and order matters, and in the same document, #person is near mining and order matters.
+You should receive one page result. The meaning of the query above is searching for documents where `#person` is near `data` and order matters, and in the same document, `#person` is near `mining` and order matters.
 
 At this step, we already have the Search Engine. The step below is to create the web interface.
 
@@ -206,9 +206,11 @@ java -cp target/uber-EntityAnnotation-1.0-SNAPSHOT.jar org.forward.entitysearch.
 
 Now, the web-based search engine is ready at localhost:8080
 
+Run a query such as `#person data` to see results.
+
 # Notes
 * Currently, the backend for web interface runs on port 1720, which is open to public. However, for some reason, if using UIUC VPN, that port cannot be used. Thus, please not use VPN when trying the demo.
-* There is a live demo on http://harrier08.cs.illinois.edu:8080
+* There is a live demo on http://harrier08.cs.illinois.edu:8080, which uses data crawled from the websites of 10 top CS departments in the US.
 
 
 
